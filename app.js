@@ -12,27 +12,27 @@ app.use(express.json());
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const redirectUri = 'http://localhost:3000/auth/google/callback';
-const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 
-// 1️. Create OAuth2 client w/ ENV secrets 
+// Creating OAuth2 client w/ ENV secrets 
 const oauth2Client = new OAuth2Client(
   clientId,
   clientSecret,
   redirectUri
 );
 
-// 2. Generate Google auth URL
+// Generating the Google URL w/ required scope that identifies "resources"
+// we want 
 const authorizeUrl = oauth2Client.generateAuthUrl({
   access_type: 'offline',
   scope: ['openid', 'email', 'profile'],
 });
 
-// 3. Redirect user to Google login page
+// Creating the GET request to generate the google authorization from our localhost 
 app.get('/auth/google', (req, res) => {
   res.redirect(authorizeUrl);
 });
 
-// 4. Handle Google callback
+// From the Google Callback, we have the redirectURI response 
 app.get('/auth/google/callback', async (req, res) => {
   try {
     const code = req.query.code;
@@ -43,7 +43,6 @@ app.get('/auth/google/callback', async (req, res) => {
 
     console.log('Access Token:', tokens.access_token);
 
-    // Optionally fetch the user’s info (email, name, etc.)
     const ticket = await oauth2Client.verifyIdToken({
       idToken: tokens.id_token,
       audience: clientId,
@@ -51,7 +50,7 @@ app.get('/auth/google/callback', async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    console.log('User Info:', payload);
+    console.log('User Email:', payload.email);
 
     res.json({
       email: payload.email,
