@@ -5,6 +5,7 @@
     "main": "app.js",
     "type": "module",
     "scripts": {
+        "start": "node app.js",
         "dev": "npx nodemon app.js"
     },
     "author": "Alan Espinosa",
@@ -13,8 +14,10 @@
         "axios": "^1.12.2",
         "dotenv": "^17.2.3",
         "express": "^5.1.0",
+        "express-session": "^1.17.3",
         "google-auth-library": "^10.4.2",
-        "googleapis": "^164.1.0"
+        "googleapis": "^164.1.0",
+        "ejs": "^3.1.9"
     },
     "devDependencies": {
         "nodemon": "^3.1.10"
