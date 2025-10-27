@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Google OAuth2 APIs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .api-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .api-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .api-icon {
+            font-size: 2.5em;
+        }
+        .api-title {
+            font-size: 1.5em;
+            color: #333;
+        }
+        .api-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 5px 5px 5px 0;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+        .result-box.show {
+            display: block;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🚀 API Dashboard</h1>
+                <p>Test all Google API integrations</p>
+            </div>
+            <div class="user-info">
+                <img src="<%= user.picture %>" alt="User" class="user-avatar">
+                <div>
+                    <div><strong><%= user.name %></strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.9;"><%= user.email %></div>
+                </div>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="api-grid">
+            <!-- Google Drive API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">📁</span>
+                    <h2 class="api-title">Google Drive</h2>
+                </div>
+                <p class="api-description">List your files and create folders in Google Drive</p>
+                <button class="btn" onclick="testDrive('list')">List Files</button>
+                <button class="btn" onclick="testDrive('create')">Create Folder</button>
+                <div id="drive-result" class="result-box"></div>
+            </div>
+
+            <!-- Gmail API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">📧</span>
+                    <h2 class="api-title">Gmail</h2>
+                </div>
+                <p class="api-description">Access your Gmail messages and labels</p>
+                <button class="btn" onclick="testGmail('messages')">Get Messages</button>
+                <button class="btn" onclick="testGmail('labels')">Get Labels</button>
+                <div id="gmail-result" class="result-box"></div>
+            </div>
+
+            <!-- Calendar API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">📅</span>
+                    <h2 class="api-title">Google Calendar</h2>
+                </div>
+                <p class="api-description">View and create calendar events</p>
+                <button class="btn" onclick="testCalendar('list')">List Events</button>
+                <button class="btn" onclick="testCalendar('create')">Create Event</button>
+                <div id="calendar-result" class="result-box"></div>
+            </div>
+
+            <!-- Google Sheets API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">📊</span>
+                    <h2 class="api-title">Google Sheets</h2>
+                </div>
+                <p class="api-description">Create and manage spreadsheets</p>
+                <button class="btn" onclick="testSheets()">Create Test Sheet</button>
+                <div id="sheets-result" class="result-box"></div>
+            </div>
+
+            <!-- YouTube API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">📺</span>
+                    <h2 class="api-title">YouTube</h2>
+                </div>
+                <p class="api-description">Access your YouTube subscriptions</p>
+                <button class="btn" onclick="testYouTube()">Get Subscriptions</button>
+                <div id="youtube-result" class="result-box"></div>
+            </div>
+
+            <!-- Maps API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-icon">🗺️</span>
+                    <h2 class="api-title">Google Maps</h2>
+                </div>
+                <p class="api-description">Geocoding and location services (requires API key)</p>
+                <button class="btn" onclick="testMaps()">Test Geocoding</button>
+                <div id="maps-result" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.classList.add('show');
+            element.innerHTML = '<div class="loading"></div> Loading...';
+        }
+
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.classList.add('show');
+            if (isError) {
+                element.innerHTML = `<span class="error">❌ Error:</span>\n${JSON.stringify(data, null, 2)}`;
+            } else {
+                element.innerHTML = `<span class="success">✅ Success:</span>\n${JSON.stringify(data, null, 2)}`;
+            }
+        }
+
+        async function testDrive(action) {
+            const resultId = 'drive-result';
+            showLoading(resultId);
+            
+            try {
+                const endpoint = action === 'list' ? '/api/drive/files' : '/api/drive/create-folder';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+
+        async function testGmail(action) {
+            const resultId = 'gmail-result';
+            showLoading(resultId);
+            
+            try {
+                const endpoint = action === 'messages' ? '/api/gmail/messages' : '/api/gmail/labels';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+
+        async function testCalendar(action) {
+            const resultId = 'calendar-result';
+            showLoading(resultId);
+            
+            try {
+                const endpoint = action === 'list' ? '/api/calendar/events' : '/api/calendar/create-event';
+                const method = action === 'list' ? 'GET' : 'POST';
+                const response = await fetch(endpoint, { method });
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+
+        async function testSheets() {
+            const resultId = 'sheets-result';
+            showLoading(resultId);
+            
+            try {
+                const response = await fetch('/api/sheets/test');
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+
+        async function testYouTube() {
+            const resultId = 'youtube-result';
+            showLoading(resultId);
+            
+            try {
+                const response = await fetch('/api/youtube/subscriptions');
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+
+        async function testMaps() {
+            const resultId = 'maps-result';
+            showLoading(resultId);
+            
+            try {
+                const response = await fetch('/api/maps/geocode?address=Google Headquarters');
+                const data = await response.json();
+                
+                if (!response.ok) throw data;
+                showResult(resultId, data);
+            } catch (error) {
+                showResult(resultId, error, true);
+            }
+        }
+    </script>
+</body>
+</html>
